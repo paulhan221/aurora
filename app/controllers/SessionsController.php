@@ -55,5 +55,12 @@ class SessionsController extends \BaseController {
     return Redirect::to('/')->with('flash_message', ['text' => 'You have been logged out!', 'class' => 'messages']);
   }
 
+  public function unauthorized()
+  {
+    $gifs = ["yPBHuNVGsrrxK", "DKclRd6n3KGD6", "777J8bECVBEOs", "FYy4Efj2hyZBm", "EMxy32NDE3Mac", "9LkjuISavFFXG"];
+    $gif = $gifs[rand(0,count($gifs) - 1)];
+    return View::make('sessions.unauthorized')->with(compact('gif'));
+  }
+
 
 }

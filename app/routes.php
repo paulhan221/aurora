@@ -34,3 +34,5 @@ Route::get('/admins', 'UsersController@adminIndex');
 Route::resource('keys', 'KeyController');
 
 Route::get('/users/{user}/mobile-commons-messages', 'UsersController@mobileCommonsMessages');
+
+Route::get('/unauthorized', 'SessionsController@unauthorized');
