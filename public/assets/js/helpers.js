@@ -59,7 +59,17 @@ function ajax_delete_unmerged_users(){
   });
 }
 
-
+function hide_advanced_search_button(){
+	var advancedButton = $('#as-button');
+	var advancedSearchContainer = $('#as-container');
+	$(advancedButton).click(function(){
+		if (advancedSearchContainer.css('display') == 'block') {
+			advancedSearchContainer.css('display', 'none');
+		} else if (advancedSearchContainer.css('display') == 'none') {
+			advancedSearchContainer.css('display','block');
+		}
+	});
+}
 
 
 
