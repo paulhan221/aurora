@@ -23,14 +23,32 @@ Route::resource('sessions', 'SessionsController', ['only' => ['create', 'store',
 
 # Users
 Route::resource('users', 'UsersController');
+
+# Delete Northstar User
+Route::delete('northstar-user-delete/{user}', ['as' => 'northstar.delete', 'uses' => 'UsersController@deleteNorthstarUser']);
+
+# Search
 Route::post('users', ['as' => 'users.search', 'uses' => 'UsersController@search', 'before' =>'auth']);
 
-# Create admins.
-Route::post('admin/{user}', ['as' => 'admin.create', 'uses' => 'UsersController@adminCreate']);
+# Display edit form with merged users
+Route::get('merge', ['as' => 'users.merge', 'uses' => 'UsersController@mergedForm']);
 
-Route::get('/admins', 'UsersController@adminIndex');
+# Delete other users that were not selected
+Route::post('merge', ['as' => 'users.merge-and-delete', 'uses' => 'UsersController@deleteUnmergedUsers']);
+
+# Create admins.
+Route::post('role/{user}', ['as' => 'role.create', 'uses' => 'UsersController@roleCreate']);
+
+Route::get('/admins', 'UsersController@staffIndex');
 
 # Key
 Route::resource('keys', 'KeyController');
 
+# Mobile Commons Message Backlog
 Route::get('/users/{user}/mobile-commons-messages', 'UsersController@mobileCommonsMessages');
+
+# Zendesk Requested Tickets Backlog
+Route::get('/users/{user}/zendesk-tickets', 'UsersController@zendeskTickets');
+
+# Unauthorized Page
+Route::get('/unauthorized', 'SessionsController@unauthorized');

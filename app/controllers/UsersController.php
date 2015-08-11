@@ -2,15 +2,17 @@
 
 use Aurora\NorthstarUser;
 use Aurora\Services\Northstar\NorthstarAPI;
+use Illuminate\Support\Facades\Input;
 
 class UsersController extends \BaseController {
 
   public function __construct(NorthstarAPI $northstar) {
     $this->beforeFilter('auth');
-    $this->beforeFilter('role:admin');
+    $this->beforeFilter('roles');
+    $this->beforeFilter('internLimits', ['except'=>['index', 'show', 'search']]);
+    $this->beforeFilter('adminPrivileges', ['only' =>['destroy', 'roleCreate', 'staffIndex', 'deleteUnmergedUsers' ]]);
     $this->northstar = $northstar;
   }
-
 
   /**
    * Display a listing of the resource.
@@ -21,8 +23,7 @@ class UsersController extends \BaseController {
   {
     try {
       // Attempt to fetch all users.
-      $input = Input::all();
-      $data = $this->northstar->getAllUsers($input);
+      $data = $this->northstar->getAllUsers();
       $users = $data['data'];
       return View::make('users.index')->with(compact('users', 'data'));
     } catch (Exception $e) {
@@ -56,22 +57,35 @@ class UsersController extends \BaseController {
   /**
    * Display the specified resource.
    *
-   * @param  int  $id
+   * @param  String  $id
    * @return Response
    */
   public function show($id)
   {
+    // Finding the user in nortstar DB and getting the informations
     $northstar_user = new NorthstarUser($id);
-    $aurora_user = $northstar_user->isAdmin($id); //Checking if user is admin.
     $northstar_profile = $northstar_user->profile;
+
+    // Finding the user assigned roles
+    $user_roles = array_pluck($northstar_user->getRoles($id), 'name');
+
+    // Getting roles that haven't been assigned to the user
+    $unassigned_roles = $northstar_user->unassignedRoles($user_roles);
+
     //Calling other APIs related to the user.
     $campaigns = $northstar_user->getCampaigns();
     $reportbacks = $northstar_user->getReportbacks();
     $mobile_commons_profile = $northstar_user->getMobileCommonsProfile();
-
-    return View::make('users.show')->with(compact('northstar_profile', 'aurora_user', 'campaigns', 'reportbacks', 'mobile_commons_profile'));
+    $zendesk_profile = $northstar_user->searchZendeskUserByEmail();
+    return View::make('users.show')->with(compact('northstar_profile', 'user_roles', 'unassigned_roles', 'campaigns', 'reportbacks', 'mobile_commons_profile', 'zendesk_profile'));
   }
 
+  /**
+   * Display user's mobile commons messages
+   *
+   * @param  String  $id
+   * @return Response
+   */
   public function mobileCommonsMessages($id)
   {
     $northstar_user = new NorthstarUser($id);
@@ -83,9 +97,24 @@ class UsersController extends \BaseController {
 
 
   /**
-   * Show the form for editing the specified resource.
+   * Display user's zendesk tickets
    *
-   * @param  int  $id
+   * @param  String  $id
+   * @return Response
+   */
+  public function zendeskTickets($id)
+  {
+    $northstar_user = new NorthstarUser($id);
+
+    $requested_tickets = $northstar_user->zendeskRequestedTickets();
+
+    return View::make('users.zendesk-tickets')->with(compact('requested_tickets'));
+  }
+
+  /**
+   * Display the form for editing user information
+   *
+   * @param  String  $id
    * @return Response
    */
   public function edit($id)
@@ -96,61 +125,129 @@ class UsersController extends \BaseController {
 
 
   /**
-   * Update the specified resource in storage.
+   * Making request to NorthstarAPI to update user's information
    *
-   * @param  int  $id
+   * @param  String  $id
    * @return Response
    */
   public function update($id)
   {
     $input = Input::except('_token', '_id', 'drupal_uid');
     $user = $this->northstar->updateUser($id, $input);
-    return Redirect::back()->with('flash_message', ['class' => 'messages', 'text' => 'Sweet, look at you updating that user.']);
+    return Redirect::route('users.show', $id)->with('flash_message', ['class' => 'messages', 'text' => 'Sweet, look at you updating that user.']);
   }
 
 
   /**
-   * Remove the specified resource from storage.
+   * Remove a role from user in database
    *
-   * @param  int  $id
+   * @param  String  $id
    * @return Response
    */
   public function destroy($id)
   {
-    User::where(['_id' => $id])->firstOrFail()->removeRole(1);
-    return Redirect::back()->with('flash_message', ['class' => 'messages', 'text' => "The less admins the warier"]);
+    $type = Input::get('role');
+    $role = Role::where('name', $type)->first();
+    User::where(['_id' => $id])->firstOrFail()->removeRole($role);
+    return Redirect::back()->with('flash_message', ['class' => 'messages', 'text' => "This user's role as " . $type . " has been removed"]);
   }
 
+
+  /**
+   * Display user/users found by processing the Input
+   *
+   * @return Response
+   */
   public function search()
   {
     $search = Input::get('search_by');
     $type = strtolower(str_replace(' ', '_', Input::get('type')));
     try {
       // Attempt to find the user.
-      $user = $this->northstar->getUser($type, $search);
-
-      return Redirect::route('users.show', $user['_id']);
-
+      $northstar_users = $this->northstar->getUsers($type, $search);
+      if (count($northstar_users) > 1){
+        return View::make('search.results')->with(compact('northstar_users'));
+      } else {
+        return Redirect::route('users.show', $northstar_users[0]['_id']);
+      }
     } catch (Exception $e) {
       return Redirect::back()->withInput()->with('flash_message', ['class' => 'messages -error', 'text' => 'Hmm, couldn\'t find anyone, are you sure thats right?']);
     }
   }
 
-  public function adminCreate($user_id)
+
+  /**
+   * Assign user to a role
+   * @param Int User ID, String role name
+   *
+   * @return Response
+   */
+  public function roleCreate($id)
   {
-    // Create a new user in database with admin role
-    User::firstOrCreate(['_id' => $user_id])->assignRole(1);
-    return Redirect::back()->with('flash_message', ['class' => 'messages', 'text' => 'The more admins the merrier.']);
+    $role = Input::get('role');
+
+    // Create a new user in database with type of role
+    $user = User::firstOrCreate(['_id' => $id])->assignRole($role);
+    return Redirect::back()->with('flash_message', ['class' => 'messages', 'text' => 'This user has been assigned a role of ' . $roles[$role]]);
   }
 
-  public function adminIndex()
+
+  /**
+   * Display Users roles
+   *
+   * @return Response
+   */
+  public function staffIndex()
   {
-    $db_admins = User::has('roles', 1)->get()->all();
-    foreach($db_admins as $admin){
-      $users[] = $this->northstar->getUser('_id', $admin['_id']);
+    $employee['admin'] = User::usersWithRole('admin');
+
+    $employee['staff'] = User::usersWithRole('staff');
+
+    $employee['intern'] = User::usersWithRole('intern');
+    // users that tried to sign in but has no role or unauthorized
+    $employee['unassigned'] = User::leftJoin('role_user', 'users.id', '=', 'role_user.user_id')->whereNull('role_user.user_id')->get();
+
+    foreach ($employee as $role => $users) {
+      foreach ($users as $user) {
+        $group[$role][] = $this->northstar->getUser('_id', $user['_id']);
+      }
     }
-    return View::make('users.admin-index')->with(compact('users'));
+    return View::make('users.staff-index')->with(compact('group'));
   }
 
 
+  /**
+   * Display form to merge duplicate users. Multiple users information is
+   * merged into the selected user where blank/different attribute will
+   * be filled or overwritten by the selected keep user.
+   *
+   * @return Response
+   */
+  public function mergedForm()
+  {
+    $inputs = Input::all();
+    $keep_id =  $inputs['keep'];
+    $delete_ids = $inputs['delete'];
+    $keep_user = $this->northstar->getUser('_id', $keep_id);
+    $user = [];
+    foreach($delete_ids as $delete_id){
+      $delete_user = $this->northstar->getUser('_id', $delete_id);
+      $user = array_merge($user, $delete_user, $keep_user);
+    }
+    return View::make('search.merge-and-delete-form')->with(compact('user'));
+  }
+
+
+  /**
+   * Making request to NorthstarAPI to delete users marked
+   * for deletion from duplication form
+   */
+  public function deleteUnmergedUsers()
+  {
+    $inputs = Input::all();
+    $delete_ids = $inputs['delete'];
+    foreach($delete_ids as $id){
+      $this->northstar->deleteUser($id);
+    }
+  }
 }

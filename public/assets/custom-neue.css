@@ -44,12 +44,13 @@
 	text-align: center;
 	margin-top: 1%
 }
+
 /* pagination buttson */
-.pagination-buttons {
-	display:inline;
+#pagination-buttons {
+  text-align: center;
 }
 
-.make-admin-header {
+.assign-role-header {
   font-weight: 900;
   color: #ffffff ;
   background: red ;
@@ -58,7 +59,7 @@
   border-radius: 5px 5px 0 0;
 }
 
-.make-admin-container{
+.assign-role-container{
   border: 1px solid black;
   line-height: 200%;
   border-radius: 0 0 5px 5px;
@@ -98,6 +99,49 @@
 }
 
 .mobile-commons-message.is-failed {
+  color: black;
+  background: #ea5656;
+  border-color: #ea5656;
+}
+
+.results {
+  background: #ddd;
+  border: 2px solid #23b7fb;
+}
+.results.first-result {
+  border: 10px solid #23b7fb;
+  border-radius: 4px;
+}
+
+.results.first-result:before {
+  font-size: 20px;
+  font-weight: bold;
+  content: "This appears to be the most recent user!";
+}
+
+.zendesk-ticket {
+  border-radius: 2px;
+  float: right;
+  width: 100%;
+  position: relative;
+  margin: 12px 0;
+  padding-left: 1%;
+  padding-right: 1%;
+}
+
+.zendesk-ticket.is-closed {
+  color: #999;
+  background: #c7fcc7;
+  border-color: #c7fcc7;
+}
+
+.zendesk-ticket.is-pending {
+  color: white;
+  background: #2095FE;
+  border-color: #2095FE;
+}
+
+.zendesk-ticket.is-open {
   color: black;
   background: #ea5656;
   border-color: #ea5656;
