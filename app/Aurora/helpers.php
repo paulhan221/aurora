@@ -42,3 +42,4 @@ function sanitize_phone_number($number, $countryName = 'US')
 		return $number;
 	}
 }
+
