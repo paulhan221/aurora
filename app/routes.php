@@ -42,10 +42,10 @@ Route::get('/admins', 'UsersController@staffIndex');
 Route::resource('keys', 'KeyController');
 
 # Mobile Commons Message Backlog
-Route::get('/users/{user}/mobile-commons-messages', 'UsersController@mobileCommonsMessages');
+// Route::get('/users/{user}/mobile-commons-messages', 'UsersController@mobileCommonsMessages');
 
 # Zendesk Requested Tickets Backlog
-Route::get('/users/{user}/zendesk-tickets', 'UsersController@zendeskTickets');
+// Route::get('/users/{user}/zendesk-tickets', 'UsersController@zendeskTickets');
 
 
 # Unauthorized Page

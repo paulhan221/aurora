@@ -176,19 +176,6 @@ class UsersController extends \BaseController {
     } catch (Exception $e) {
       return View::make('users.index')->with('flash_message', ['class' => 'messages -error', 'text' => 'Hmm, couldn\'t find anyone, are you sure thats right?']);
     }
-
-
-    // try {
-    //   // Attempt to find the user.
-    //   $northstar_users = $this->northstar->getUsers($type, $search);
-    //   if (count($northstar_users) > 1){
-    //     return View::make('search.results')->with(compact('northstar_users'));
-    //   } else {
-    //     return Redirect::route('users.show', $northstar_users[0]['_id']);
-    //   }
-    // } catch (Exception $e) {
-    //   return Redirect::back()->withInput()->with('flash_message', ['class' => 'messages -error', 'text' => 'Hmm, couldn\'t find anyone, are you sure thats right?']);
-    // }
   }
 
   public function advancedSearch()
@@ -202,7 +189,6 @@ class UsersController extends \BaseController {
       return Redirect::to('/users')->with('flash_message', ['class' => 'messages -error', 'text' => 'Hmm, couldn\'t find anyone, are you sure thats right?']);
     }
   }
-
 
   /**
    * Assign user to a role
