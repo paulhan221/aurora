@@ -50,5 +50,10 @@ Route::get('/users/{user}/mobile-commons-messages', 'UsersController@mobileCommo
 # Zendesk Requested Tickets Backlog
 Route::get('/users/{user}/zendesk-tickets', 'UsersController@zendeskTickets');
 
+
 # Unauthorized Page
 Route::get('/unauthorized', 'SessionsController@unauthorized');
+=======
+# Advanced Search
+Route::post('/advanced-search', 'UsersController@advancedSearch');
+

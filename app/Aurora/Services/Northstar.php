@@ -139,4 +139,11 @@ class NorthstarAPI {
   {
     $response = $this->client->delete('users/' . $id);
   }
+
+  public function getAdvancedSearchUsers($inputs)
+  {
+    $queries = http_build_query($inputs);
+    $response = $this->client->get('users?' . $queries);
+    return $response->json();
+  }
 }
