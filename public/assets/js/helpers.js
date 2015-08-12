@@ -59,7 +59,7 @@ function ajax_delete_unmerged_users(){
   });
 }
 
-function advancedSearchToggle(){
+function advanced_search_toggle(){
 	$(document).ready(function(){
 	  var advancedSearchContainer = $( "#advanced-search-container" );
 	  var normalSearchContainer = $( "#normal-search-container" );

@@ -90,3 +90,14 @@ function ticket_state_class($status)
 		echo 'is-pending';
 	}
 }
+
+function type_detection($input)
+{
+  if (filter_var($input, FILTER_VALIDATE_EMAIL)) {
+    return 'email';
+  } elseif (strlen((string)intval($input)) >= 10) { //filter_var($number, FILTER_SANITIZE_NUMBER_INT);
+    return 'mobile';
+  } else if (strlen((string)intval($input)) !== 1 && strlen((string)intval($input)) <= 10) {
+    return 'drupal_id';
+  }
+}

@@ -165,21 +165,16 @@ class UsersController extends \BaseController {
   public function search()
   {
     $input = Input::get('search_by');
-    if (filter_var($input, FILTER_VALIDATE_EMAIL)) {
-      $type = 'email';
-    } elseif (strlen((string)intval($input)) >= 10) { //filter_var($number, FILTER_SANITIZE_NUMBER_INT);
-      $type = 'mobile';
-    } else if (strlen((string)intval($input)) !== 1 && strlen((string)intval($input)) <= 10) {
-      $type = 'drupal_id';
-    } else {
-      return Redirect::to('/users')->with('flash_message', ['class' => 'messages', 'text' => "Uh, oh, there's something wrong!?"]);
+    $type = type_detection($input);
+    if ($type == null){
+     return Redirect::to('/users')->with('flash_message', ['class' => 'messages -error', 'text' => 'Hmm, couldn\'t find anyone, are you sure thats right?']);
     }
     try {
       $data = $this->northstar->getAdvancedSearchUsers([$type=>$input]);
       $users = $data['data'];
       return View::make('users.index')->with(compact('users', 'data'));
     } catch (Exception $e) {
-      return View::make('users.index')->with('flash_message', ['class' => 'messages -error', 'text' => 'Looks like there is something wrong with the connection!']);
+      return View::make('users.index')->with('flash_message', ['class' => 'messages -error', 'text' => 'Hmm, couldn\'t find anyone, are you sure thats right?']);
     }
 
 
@@ -194,6 +189,18 @@ class UsersController extends \BaseController {
     // } catch (Exception $e) {
     //   return Redirect::back()->withInput()->with('flash_message', ['class' => 'messages -error', 'text' => 'Hmm, couldn\'t find anyone, are you sure thats right?']);
     // }
+  }
+
+  public function advancedSearch()
+  {
+    $inputs = array_filter(Input::except('_token'));
+    try {
+      $data = $this->northstar->getAdvancedSearchUsers($inputs);
+      $users = $data['data'];
+      return View::make('users.index')->with(compact('users', 'data'));
+    } catch (Exception $e) {
+      return Redirect::to('/users')->with('flash_message', ['class' => 'messages -error', 'text' => 'Hmm, couldn\'t find anyone, are you sure thats right?']);
+    }
   }
 
 
@@ -272,15 +279,4 @@ class UsersController extends \BaseController {
     }
   }
 
-  public function advancedSearch()
-  {
-    $inputs = array_filter(Input::except('_token'));
-    try {
-      $data = $this->northstar->getAdvancedSearchUsers($inputs);
-      $users = $data['data'];
-      return View::make('users.index')->with(compact('users', 'data'));
-    } catch (Exception $e) {
-      return View::make('users.index')->with('flash_message', ['class' => 'messages -error', 'text' => 'Looks like there is something wrong with the connection!']);
-    }
-  }
 }

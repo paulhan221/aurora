@@ -142,8 +142,8 @@ class NorthstarAPI {
 
   public function getAdvancedSearchUsers($inputs)
   {
-    $queries = http_build_query($inputs);
-    $response = $this->client->get('users?' . $queries);
+    $query = http_build_query($inputs);
+    $response = $this->client->get('users?' . $query);
     return $response->json();
   }
 }
