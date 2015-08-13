@@ -21,3 +21,4 @@
 		@endforelse
 	</tbody>
 </table>
+

@@ -52,3 +52,5 @@ Route::get('/users/{user}/zendesk-tickets', 'UsersController@zendeskTickets');
 
 # Unauthorized Page
 Route::get('/unauthorized', 'SessionsController@unauthorized');
+
+Route::get('export', array('uses' => 'UsersController@export', 'as' => 'admin.users.export'));

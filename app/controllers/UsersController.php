@@ -3,6 +3,7 @@
 use Aurora\NorthstarUser;
 use Aurora\Services\Northstar\NorthstarAPI;
 use Illuminate\Support\Facades\Input;
+use IzzyP\Formatter\Formatter;
 
 class UsersController extends \BaseController {
 
@@ -30,7 +31,6 @@ class UsersController extends \BaseController {
       return View::make('users.index')->with('flash_message', ['class' => 'messages -error', 'text' => 'Looks like there is something wrong with the connection!']);
     }
   }
-
 
   /**
    * Show the form for creating a new resource.
@@ -250,4 +250,18 @@ class UsersController extends \BaseController {
       $this->northstar->deleteUser($id);
     }
   }
+
+  public function export(){
+    Excel::create('Users', function($excel) {
+    $excel->sheet('Users', function($sheet) {
+    $data = $this->northstar->getAllUsers();
+    $users = $data['data'];
+        $sheet->loadView('users.partials.index-table', ['users' => $users]);
+      });
+    })->download('csv');
+  }
 }
+
+
+
+

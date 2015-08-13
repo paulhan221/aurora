@@ -11,7 +11,7 @@
 
     @if ($users)
       <h3 class="heading -gamma">Total members : {{{ number_format($data['total']) }}}</h3>
-
+			<a style="float:right" href="{{URL::route('admin.users.export')}}">Download as  CSV</a>
       @include('users.partials.index-table', ['users' => $users])
 
       @include('users.partials.waypoints')
@@ -19,4 +19,5 @@
     @endif
   </div>
 </div>
+
 @stop
